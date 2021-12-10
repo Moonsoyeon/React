@@ -911,53 +911,63 @@ Switch : 매치되는 <Route> 들을 전부 보여주지 말고 한 번에 하�
 
 ### React Router 3 : URL 파라미터로 상세페이지 100개 만들기
 
-< Detail > 을 다른 파일에 저장해둔 뒤 App.js까지 import 해오기
+< Detail > 컴포넌트에 실제 상품명 데이터바인딩 해보기
 
 ```
-1. src 폴더 내에 Detail.js 파일을 만들고
-2. import React from 'react';
-3. function Detail(){ return( ~~~HTML잔뜩~~~ ) };
-4. 맨 마지막 줄에 Detail 이라는 함수를 export default Detail
-5. (App.js 파일)
-   import Detail from'./Detail.js';
-   <Route path = "/detail">
-      <Detail/>
-   </Route>
+1. <Detail shoes = {shoes}/> 원하는 state를 골라 전송
+2. 받을 컴포넌트 안에서 props 등록
+3. props.shoes[0].title 자유롭게 보낸 변수나 state를 사용
 ```
 
-Link 태그로 페이지 이동 버튼 만들기
+데이터는 항상 위에서 아래로 흘러야 한다
 
 ```
-상단메뉴(Navbar)로 이동
-   <Nav.Link> <Link to = "/">Home</Link> </Nav.Link>
-   <Nav.Link> <Link to = "/detail">Detail</Link> </Nav.Link>
-   => Link 태그를 사용하고 to 속성을 이용해 경로만 지정해주면 됨
+상위 컴포넌트가 중요 데이터를 다 가지고 있어야 한다
+하위 컴포넌트는 데이터를 항상 props로 받아서 써야 함
+안그러면 데이터를 역방향으로 전달시킨다면 props보다 훨씬 귀찮음
+  => state를 만들 땐 state를 필요로 하는 컴포넌트들 중 가장 최상위 컴포넌트에 보관
 ```
 
-다른 방법으로 페이지 이동 기능 만들기
+상세 페이지 3개 만들기
 
 ```
-1. import {useHistory} from 'react-router-dom';
-2. let history = useHistory();
-   -> useHistory() : 페이지 이동 내역 + 여러가지 유용한 함수
-                     history 라는 변수엔 큰 object{} 자료가 하나 저장되어있음
-3. goBack() : 페이지가 뒤로 간다
-   <button onClick = { () => { history.goBack() }} >뒤로가기</Button>
-4. push() : 커스텀 페이지로 이동하는 기능을 만들고 싶다
-   <button onClick = { () => { history.push('/') }} >뒤로가기</button>
+콜론 기호 사용하기
+<Route path = "/detail/:id">
+  => :id 자리에 아무 문자나 입력하면 <Detail> 컴포넌트 보여줌
+     :id 부분은 함수 파라미터처럼 자유롭게 작성
+     파라미터는 2개 3개 계속 추가 가능
 ```
 
-Switch 컴포넌트에 대해 알아보자
+각각 URL 접속 시 상품명을 다르게 보여줘야 하는데..
 
 ```
-Switch : 매치되는 <Route> 들을 전부 보여주지 말고 한 번에 하나만 보여주세요~
-   => path = "/:id" : /슬래시 뒤에 모든 문자가 오면 이 Route로 안내해주세요~
-      그럼 /detail로 이동하면 (1)<Detail> (2)<div>새로만든route</div> 둘 다 보여줌
-      왜냐면 리액트 라우터는 그냥 URL 매치되는 것들 전부 다 보여주니깐
-      한 번에 하나의 <Route>만 보여주고 싶다?
-      => <Route>들을 위에서 import 해온 <Switch> 태그로 감싸면 됨
-         감싸주면 여러 개의 Route가 매칭이 되어도 맨 위의 Route 하나만 보여줌
-         이걸 응용하면 / 경로 문제도, exact도 쓰지 않고 해결 가능
+지금은 어떤 URL로 접속하든 항상 0번째 상품명만 보임
+/detail/0으로 접속하면 0번째, /detail/1으로 접속하면 1번째 상품명이 보여야 함
+  => 그래서 :id 자리에 입력한 숫자를 props.shoes[] 자리에 넣고 싶음
+     => useParams() 사용하면 가능!
+        useParams() 함수는 현재 URL에 적힌 모든 파라미터를 {파라미터1, 파라미터2} 이런 식으로 저장해 주는 함수
+        => 그래서 id라는 변수는 :id 자리에 있는 숫자를 의미
+        1. import를 이용해 useParams를 가져오고, 변수에 저장
+           let { id } = useParams();
+           => /detail/1로 접속하면 id라는 변수는 1이 됨
+        2. {props.shoes[id].title}
+```
+
+자료의 순서가 변경되면 상세페이지도 고장나는 문제
+
+```
+만약 메인페이지나 다른 페이지에서 상품 순서를 가격 순으로 변경하는 기능을 만들어버렸다고 가정
+그래서 shoes라는 상품 데이터가 가격 순으로 변경이 됨
+그럼 0번 째 상품이 다른 상품으로 변하게 됨
+=> Detail.js에 데이터바인딩 할 때 0번째 상품의 제목을 보여달라는 것이 아닌, 상품의 영구 번호가 0인 상품의 제목을 보여줘야 함
+   영구 번호는 shoes라는 상품 데이터 안에 함께 저장되어 있음
+   => let 찾은상품 = props.shoes.find(function(상품){
+        return 상품.id == id
+      });
+      find() 라는 ES6 문법. Array 안에서 원하는 자료를 찾고싶을 때 사용
+      1. array 뒤에 붙일 수 있으며, 안에 콜백함수가 들어감
+      2. 콜백함수 내의 파라미터는 array 안에 있던 하나하나의 데이터를 의미
+      3. return 오른쪽엔 조건식. 이게 참인 데이터만 새로운 변수에 저장
 ```
 
 </details>
