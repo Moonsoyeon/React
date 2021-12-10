@@ -37,6 +37,8 @@
 
 ---
 
+### Part 1 : 블로그 제작 & 기초 문법
+
 <details>
 <summary>1-3</summary>
 
@@ -570,6 +572,8 @@ ex)
 </details>
 
 ---
+
+### Part 2 : 쇼핑몰 프로젝트
 
 <details>
 <summary>2-1</summary>
